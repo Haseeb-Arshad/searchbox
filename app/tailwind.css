@@ -4,9 +4,19 @@
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-white dark:bg-gray-300;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
+}
+
+@keyframes staggerUp {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0px); opacity: 1; }
+}
+
+.animated-category {
+  display: inline-block;
+  animation: animated-category 3s infinite alternate;
 }
