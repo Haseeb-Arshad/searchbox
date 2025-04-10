@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "@remix-run/react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Send, BarChart2, Tag, Video, PlaneTakeoff, AudioLines, ShoppingCart } from "lucide-react"
+import { Search, Send, Tag, ShoppingCart, Sparkles, Star, TrendingUp, ArrowRight } from "lucide-react"
 import { Input } from "./ui/input"
 import useDebounce from "../hooks/useDebounce"
+import { useTheme } from "../context/ThemeContext"
 
 interface Product {
   id: string
@@ -27,10 +28,15 @@ export default function EnhancedSearchBar() {
   const [isFocused, setIsFocused] = useState(false)
   const debouncedQuery = useDebounce(query, 300)
   const navigate = useNavigate()
+  const { theme } = useTheme()
 
   // Popular searches when no query is entered
   const popularSearches = [
-    "Smartphones", "Laptops", "Headphones", "Shoes", "Watches"
+    { name: "Smartphones", icon: <Sparkles className="h-3.5 w-3.5" /> },
+    { name: "Laptops", icon: <Star className="h-3.5 w-3.5" /> },
+    { name: "Headphones", icon: <TrendingUp className="h-3.5 w-3.5" /> },
+    { name: "Shoes", icon: <Star className="h-3.5 w-3.5" /> },
+    { name: "Watches", icon: <Sparkles className="h-3.5 w-3.5" /> }
   ]
 
   useEffect(() => {
@@ -134,14 +140,14 @@ export default function EnhancedSearchBar() {
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                 placeholder="Search for products, brands, categories..."
-                className="pl-12 pr-12 py-6 h-14 text-base transition-all duration-200 border border-zinc-200 shadow-md dark:shadow-zinc-900/20 hover:shadow-lg focus:shadow-xl dark:bg-zinc-900 dark:border-zinc-800 rounded-2xl"
+                className="pl-12 pr-12 py-6 h-14 text-base transition-all duration-200 bg-surface-light dark:bg-surface-dark border border-zinc-200 shadow-search dark:shadow-zinc-900/20 hover:shadow-lg focus:shadow-xl dark:border-zinc-800 rounded-2xl"
               />
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-500 dark:text-primary-400">
                 <Search className="h-5 w-5" />
               </div>
               
               <AnimatePresence mode="popLayout">
-                {query.length > 0 ? (
+                {query.length > 0 && (
                   <motion.button
                     key="send-button"
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -149,16 +155,16 @@ export default function EnhancedSearchBar() {
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.15 }}
                     type="submit"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-primary-500 hover:bg-primary-600 flex items-center justify-center text-white transition-colors shadow-md hover:shadow-lg"
                   >
-                    <Send className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" />
                   </motion.button>
-                ) : null}
+                )}
               </AnimatePresence>
 
               {isLoading && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <div className="h-5 w-5 border-2 border-zinc-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="h-5 w-5 border-2 border-zinc-300 border-t-primary-500 rounded-full animate-spin"></div>
                 </div>
               )}
             </motion.div>
@@ -172,7 +178,7 @@ export default function EnhancedSearchBar() {
               initial="hidden"
               animate="show"
               exit="exit"
-              className="absolute z-50 w-full mt-2 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden"
+              className="absolute z-[100] w-full mt-2 bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden max-h-[80vh] overflow-y-auto"
             >
               {!query && (
                 <div className="p-4">
@@ -180,15 +186,16 @@ export default function EnhancedSearchBar() {
                   <div className="flex flex-wrap gap-2">
                     {popularSearches.map((term, i) => (
                       <motion.button
-                        key={term}
+                        key={term.name}
                         variants={item}
-                        className="px-3 py-1.5 text-sm bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full transition-colors"
+                        className="px-3 py-1.5 text-sm bg-primary-50 hover:bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:hover:bg-primary-900/30 dark:text-primary-300 rounded-full transition-colors flex items-center gap-1.5 shadow-sm hover:shadow"
                         onClick={() => {
-                          setQuery(term)
+                          setQuery(term.name)
                           handleSearch()
                         }}
                       >
-                        {term}
+                        {term.icon}
+                        <span>{term.name}</span>
                       </motion.button>
                     ))}
                   </div>
@@ -204,10 +211,10 @@ export default function EnhancedSearchBar() {
                         <motion.li
                           key={product.id}
                           variants={item}
-                          className="flex items-center gap-3 p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg cursor-pointer transition-colors"
+                          className="flex items-center gap-3 p-2 hover:bg-primary-50 dark:hover:bg-primary-900/10 rounded-lg cursor-pointer transition-colors"
                           onClick={() => navigate(`/product/${product.id}`)}
                         >
-                          <div className="h-12 w-12 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-shrink-0">
+                          <div className="h-12 w-12 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-shrink-0 shadow-sm">
                             {product.image ? (
                               <img 
                                 src={product.image} 
@@ -225,10 +232,11 @@ export default function EnhancedSearchBar() {
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs text-zinc-500 dark:text-zinc-400">{product.storeName}</span>
                               {product.price && (
-                                <span className="text-xs font-medium text-zinc-900 dark:text-zinc-300">{product.price}</span>
+                                <span className="text-xs font-medium text-primary-600 dark:text-primary-400">{product.price}</span>
                               )}
                             </div>
                           </div>
+                          <ArrowRight className="h-4 w-4 text-zinc-400 flex-shrink-0" />
                         </motion.li>
                       ))}
                     </ul>
@@ -244,10 +252,10 @@ export default function EnhancedSearchBar() {
                       <motion.button
                         key={category}
                         variants={item}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-accent-purple/10 hover:bg-accent-purple/20 text-accent-purple rounded-full transition-colors shadow-sm hover:shadow"
                         onClick={() => handleCategoryClick(category)}
                       >
-                        <Tag className="h-3 w-3" />
+                        <Tag className="h-3.5 w-3.5" />
                         <span>{category}</span>
                       </motion.button>
                     ))}
@@ -261,7 +269,7 @@ export default function EnhancedSearchBar() {
               >
                 <button 
                   onClick={handleSearch}
-                  className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors"
+                  className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors"
                 >
                   View all results for "{query}"
                 </button>
