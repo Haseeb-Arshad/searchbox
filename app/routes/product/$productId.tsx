@@ -128,15 +128,15 @@ export default function ProductDetail() {
               transition={{ duration: 0.6 }}
               className="relative"
             >
-              <motion.div 
+      <motion.div
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.3 }}
                 className="relative overflow-hidden rounded-2xl shadow-card cursor-pointer"
-                onClick={() => setIsOpen(true)}
-              >
-                <img
-                  src={product.image}
-                  alt={product.title}
+        onClick={() => setIsOpen(true)}
+      >
+        <img
+          src={product.image}
+          alt={product.title}
                   className="w-full h-auto object-cover rounded-2xl"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end justify-start p-6">
@@ -214,7 +214,7 @@ export default function ProductDetail() {
                   >
                     {isDescriptionExpanded ? "Show less" : "Show more"}
                     <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${isDescriptionExpanded ? "rotate-180" : ""}`} />
-                  </button>
+        </button>
                 )}
               </div>
               
@@ -234,7 +234,7 @@ export default function ProductDetail() {
                 <motion.a
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  href={product.link}
+          href={product.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white font-medium rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
@@ -243,7 +243,7 @@ export default function ProductDetail() {
                   <span>View Original</span>
                 </motion.a>
               </div>
-            </motion.div>
+      </motion.div>
           </div>
           
           {/* Similar Products Section */}
@@ -293,28 +293,28 @@ export default function ProductDetail() {
         </div>
 
         {/* Lightbox */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-90 backdrop-blur-xl flex items-center justify-center z-50"
-              onClick={() => setIsOpen(false)}
-            >
-              <motion.div
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className="relative max-w-5xl max-h-[90vh] overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <img
-                  src={product.image}
-                  alt={product.title}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={product.image}
+                alt={product.title}
                   className="max-h-[85vh] max-w-full object-contain"
-                />
+              />
                 <button
                   onClick={() => setIsOpen(false)}
                   className="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full backdrop-blur-md hover:bg-black/70 transition-colors"
@@ -324,11 +324,11 @@ export default function ProductDetail() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </motion.div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
     </Layout>
   );
 }

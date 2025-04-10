@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import EnhancedSearchBar from "../components/EnhancedSearchBar";
 import Layout from "../components/Layout";
@@ -30,6 +30,12 @@ export default function Index() {
       description: "Discover new products based on your preferences and search history"
     }
   ];
+
+  const scrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <Layout>
@@ -120,7 +126,7 @@ export default function Index() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={scrollToTop}
               className="bg-white text-primary-600 font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all"
             >
               Start Searching
