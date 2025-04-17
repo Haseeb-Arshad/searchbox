@@ -25,6 +25,7 @@ export default function EnhancedSearchBar() {
   const [results, setResults] = useState<SearchResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [isHoveringDropdown, setIsHoveringDropdown] = useState(false)
   const searchBoxRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -44,13 +45,15 @@ export default function EnhancedSearchBar() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target as Node)) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target as Node) && 
+          dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsFocused(false)
       }
     }
 
     function handleScroll() {
-      if (isFocused) {
+      // Only close dropdown if not hovering over dropdown or searchbox
+      if (isFocused && !isHoveringDropdown && !searchBoxRef.current?.contains(document.activeElement as Node)) {
         setIsFocused(false)
       }
     }
@@ -66,7 +69,7 @@ export default function EnhancedSearchBar() {
         window.removeEventListener('resize', handleScroll)
       }
     }
-  }, [searchBoxRef, isFocused])
+  }, [searchBoxRef, isFocused, isHoveringDropdown])
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -102,6 +105,7 @@ export default function EnhancedSearchBar() {
             dropdownRef.current.style.top = `${rect.bottom + 8}px`
             dropdownRef.current.style.left = `${rect.left}px`
             dropdownRef.current.style.width = `${rect.width}px`
+            dropdownRef.current.style.zIndex = "9999"
           }
         }
       }
@@ -185,7 +189,7 @@ export default function EnhancedSearchBar() {
       transition: { 
         duration: 0.2,
         ease: [0.16, 1, 0.3, 1],
-        staggerChildren: 0.035
+        staggerChildren: 0.025
       }
     },
     exit: { 
@@ -199,21 +203,21 @@ export default function EnhancedSearchBar() {
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 8 },
+    hidden: { opacity: 0, y: 6 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: {
         type: "spring",
-        damping: 25,
-        stiffness: 300
+        damping: 28,
+        stiffness: 350
       }
     },
     exit: { 
       opacity: 0, 
-      y: 8,
+      y: 6,
       transition: {
-        duration: 0.15
+        duration: 0.12
       }
     }
   }
@@ -256,30 +260,18 @@ export default function EnhancedSearchBar() {
   }, []) // Empty dependency array means this runs once on mount
 
   return (
-    <div className="w-full max-w-3xl mx-auto relative" ref={searchBoxRef}>
+    <div className="relative w-full max-w-4xl mx-auto" ref={searchBoxRef}>
+      {/* Search input form */}
       <form onSubmit={handleSearch} className="relative">
+        <div className="relative">
         <motion.div 
-          initial={false}
-          animate={{ 
-            scale: isFocused ? 1.01 : 1,
-            boxShadow: isFocused 
-              ? '0 10px 30px -10px rgba(0, 0, 0, 0.12), 0 4px 20px -5px rgba(0, 0, 0, 0.1)' 
-              : '0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.05)'
-          }}
-          transition={{ 
-            duration: 0.2,
-            ease: [0.16, 1, 0.3, 1]
-          }}
-          className="relative overflow-hidden rounded-full"
-        >
-          <div className={`flex items-center bg-white dark:bg-zinc-900 rounded-full ${
-            isFocused 
-              ? 'ring-2 ring-primary-400/50 dark:ring-primary-400/70' 
-              : 'ring-1 ring-zinc-200 dark:ring-zinc-700'
-          } transition-all duration-200`}>
-            <div className="pl-5 pr-3 text-primary-500 dark:text-primary-400">
-              <Search className="h-5 w-5" />
-            </div>
+            className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            initial={{ opacity: 0.5 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Search className={`h-5 w-5 ${isFocused ? 'text-primary-500' : 'text-zinc-400 dark:text-zinc-500'}`} />
+          </motion.div>
             
             <input
               ref={inputRef}
@@ -287,33 +279,40 @@ export default function EnhancedSearchBar() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => setIsFocused(true)}
-              placeholder="Search for products, brands, categories..."
-              className="flex-1 py-3.5 h-14 text-base bg-transparent outline-none border-none text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+            placeholder="Search products, brands, stores..."
+            className={`block w-full py-3 pl-10 pr-14 rounded-xl transition-all duration-300
+              border-zinc-200 dark:border-zinc-800 
+              bg-white dark:bg-zinc-900
+              text-zinc-900 dark:text-zinc-100 
+              shadow-sm hover:shadow
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+              placeholder:text-zinc-400 dark:placeholder:text-zinc-600
+              ${isFocused ? 'shadow-lg ring-2 ring-primary-500' : 'ring-0'}
+            `}
               aria-label="Search"
             />
             
-            {isLoading ? (
-              <div className="h-9 w-9 flex items-center justify-center mx-2.5">
-                <div className="h-5 w-5 border-2 border-zinc-300 dark:border-zinc-700 border-t-primary-500 dark:border-t-primary-400 rounded-full animate-spin"></div>
-              </div>
-            ) : query ? (
               <motion.button
-                whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-500 h-10 w-10 rounded-full flex items-center justify-center mx-2.5 shadow-md text-white transition-colors"
-                aria-label="Search"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
-                <ArrowRight className="h-5 w-5" />
+            <div className="p-1.5 bg-primary-500 hover:bg-primary-600 rounded-lg text-white transition-colors">
+              <ArrowRight className="h-4 w-4" />
+            </div>
               </motion.button>
-            ) : (
-              <div className="px-4 py-1.5 mr-2.5 text-xs border border-zinc-200 dark:border-zinc-700 rounded-full bg-zinc-100/50 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400">
-                Press /
               </div>
-            )}
+        
+        {/* Keyboard shortcut badge */}
+        <div className="absolute right-14 top-1/2 transform -translate-y-1/2 hidden sm:flex items-center">
+          <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs rounded-md px-1.5 py-0.5 font-mono">
+            /
+          </span>
           </div>
-        </motion.div>
       </form>
       
+      {/* Dropdown */}
       <AnimatePresence>
         {isFocused && (
           <motion.div
@@ -322,181 +321,184 @@ export default function EnhancedSearchBar() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed z-[9999] rounded-2xl"
-            style={{ 
-              pointerEvents: "auto",
-              transformOrigin: "top center",
-              willChange: "transform, opacity"
-            }}
+            className="absolute mt-1 w-full rounded-xl overflow-hidden shadow-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 z-50"
+            onMouseEnter={() => setIsHoveringDropdown(true)}
+            onMouseLeave={() => setIsHoveringDropdown(false)}
           >
-            <div className="backdrop-blur-xl backdrop-saturate-150 bg-white/95 dark:bg-zinc-900/95 rounded-2xl shadow-[0_20px_70px_-10px_rgba(0,0,0,0.3),0_10px_30px_-15px_rgba(0,0,0,0.2)] border border-zinc-200/80 dark:border-zinc-700/80 overflow-hidden max-h-[min(800px,80vh)] overflow-y-auto custom-scrollbar">
-              {!query && (
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Popular Searches</h3>
-                    <span className="text-xs text-zinc-400 dark:text-zinc-500">Try searching for</span>
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                <div className="h-4 w-4 border-2 border-zinc-300 dark:border-zinc-700 border-t-primary-500 rounded-full animate-spin" />
+                <span>Searching...</span>
                   </div>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {popularSearches.map((term, i) => (
+            )}
+
+            {/* Prompt message when no query */}
+            {!query && !isLoading && (
+              <motion.div 
+                variants={itemVariants}
+                className="px-4 py-2.5 text-sm text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800"
+              >
+                <p>Try searching for "smartphones", "headphones", or your favorite brands</p>
+              </motion.div>
+            )}
+
+            {/* Popular searches */}
+            {!debouncedQuery && (
+              <div className="p-3">
+                <motion.h3 
+                  variants={itemVariants}
+                  className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-medium px-2 mb-2"
+                >
+                  Popular Searches
+                </motion.h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {popularSearches.map((search, idx) => (
                       <motion.button
-                        key={term.name}
+                      key={search.name}
                         variants={itemVariants}
-                        whileHover={{ 
-                          scale: 1.03, 
-                          y: -2,
-                          transition: { duration: 0.2 }
-                        }}
-                        whileTap={{ scale: 0.97 }}
-                        className="px-4 py-2.5 text-sm bg-zinc-50 hover:bg-primary-50 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700/90 dark:text-zinc-200 rounded-xl transition-all flex items-center gap-2 shadow-sm hover:shadow border border-zinc-200/80 dark:border-zinc-700/80 overflow-hidden group"
+                      whileHover={{ scale: 1.02, x: 2 }}
+                      whileTap={{ scale: 0.98 }}
                         onClick={() => {
-                          setQuery(term.name)
-                          handleSearch()
-                        }}
-                      >
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-500 dark:text-primary-400 group-hover:bg-primary-200 dark:group-hover:bg-primary-800/40 transition-colors">
-                          {term.icon}
-                        </div>
-                        <span className="font-medium">{term.name}</span>
+                        setQuery(search.name);
+                        handleSearch();
+                      }}
+                      className="flex items-center gap-2 p-2 text-sm rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors"
+                    >
+                      <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-500 dark:text-primary-400">
+                        {search.icon}
+                      </span>
+                      <span className="truncate">{search.name}</span>
                       </motion.button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {results && results.products && results.products.length > 0 && (
-                <div className={`${!query ? 'border-t border-zinc-200/70 dark:border-zinc-800/70' : ''}`}>
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Quick Results</h3>
-                      <span className="text-xs bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 px-2.5 py-1 rounded-full font-medium">
-                        {results.products.length} found
-                      </span>
+            {/* Categories */}
+            {results?.categories && results.categories.length > 0 && (
+              <div className="px-3 py-2 border-t border-zinc-100 dark:border-zinc-800">
+                <motion.h3 
+                  variants={itemVariants}
+                  className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-medium px-2 mb-2"
+                >
+                  Categories
+                </motion.h3>
+                <div className="flex flex-wrap gap-2 px-2">
+                  {results.categories.map((category, idx) => (
+                    <motion.button
+                      key={category}
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleCategoryClick(category)}
+                      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    >
+                      <Tag className="h-3 w-3" />
+                      {category}
+                    </motion.button>
+                  ))}
+                </div>
                     </div>
-                    
-                    <div className="space-y-3.5">
-                      {results.products.map((product, index) => (
-                        <motion.div
+            )}
+
+            {/* Product results */}
+            {results?.products && results.products.length > 0 && (
+              <div className="border-t border-zinc-100 dark:border-zinc-800 max-h-[350px] overflow-y-auto custom-scrollbar">
+                <motion.h3 
+                  variants={itemVariants}
+                  className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-medium px-5 pt-3 pb-1"
+                >
+                  Products
+                </motion.h3>
+                {results.products.map((product, idx) => (
+                  <motion.button
                           key={product.id}
                           variants={itemVariants}
-                          custom={index}
-                          whileHover={{ 
-                            scale: 1.02, 
-                            x: 4,
-                            transition: { 
-                              type: "spring",
-                              stiffness: 400,
-                              damping: 25
-                            }
-                          }}
-                          className="flex items-center gap-4 p-3.5 hover:bg-zinc-50/90 dark:hover:bg-zinc-800/70 rounded-xl cursor-pointer transition-all border border-transparent hover:border-zinc-200/80 dark:hover:border-zinc-700/80 group"
                           onClick={() => handleProductClick(product.id)}
-                        >
-                          <motion.div 
-                            className="h-16 w-16 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex-shrink-0 shadow-sm group-hover:shadow"
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.2 }}
-                          >
+                    className="w-full px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors flex items-center gap-3 text-left"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                             {product.image ? (
                               <img 
                                 src={product.image} 
                                 alt={product.title} 
-                                className="h-full w-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                          className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="h-full w-full flex items-center justify-center">
-                                <ShoppingCart className="h-6 w-6 text-zinc-400" />
+                        <div className="w-full h-full flex items-center justify-center bg-zinc-200 dark:bg-zinc-700">
+                          <ShoppingCart className="h-4 w-4 text-zinc-400" />
                               </div>
                             )}
-                          </motion.div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <p className="text-base font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">{product.title}</p>
-                            <div className="flex items-center flex-wrap gap-3 mt-1.5">
-                              <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
-                                <Tag className="h-3 w-3" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                        {product.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                                 {product.storeName}
                               </span>
-                              
                               {product.price && (
-                                <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">
+                          <>
+                            <span className="text-xs text-zinc-400 dark:text-zinc-600">•</span>
+                            <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
                                   {product.price}
                                 </span>
+                          </>
                               )}
                             </div>
-                          </div>
-                          
-                          <motion.div
-                            className="h-8 w-8 flex items-center justify-center rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-500 dark:text-primary-400 flex-shrink-0 group-hover:bg-primary-500 group-hover:text-white transition-all duration-300"
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </motion.div>
-                        </motion.div>
-                      ))}
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {results && results.categories && results.categories.length > 0 && (
-                <div className="border-t border-zinc-200/70 dark:border-zinc-800/70 p-5">
-                  <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-3">Shop by Store</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {results.categories.map((category, index) => (
-                      <motion.button
-                        key={category}
-                        variants={itemVariants}
-                        custom={index}
-                        whileHover={{ 
-                          scale: 1.05, 
-                          y: -2,
-                          transition: { 
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 25
-                          }
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:hover:bg-purple-900/30 dark:text-purple-300 rounded-xl transition-all shadow-sm hover:shadow-md"
-                        onClick={() => handleCategoryClick(category)}
-                      >
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-800/30 text-purple-500">
-                          <Tag className="h-3 w-3" />
-                        </div>
-                        <span className="font-medium">{category}</span>
                       </motion.button>
                     ))}
-                  </div>
+                
+                {/* View all results button */}
+                <motion.div 
+                  variants={itemVariants}
+                  className="p-3 border-t border-zinc-100 dark:border-zinc-800"
+                >
+                  <button
+                    onClick={handleSearch}
+                    className="w-full py-2 px-4 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg text-sm font-medium text-primary-600 dark:text-primary-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span>View all results</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </motion.div>
                 </div>
               )}
 
+            {/* No results */}
+            {query && !isLoading && results?.products && results.products.length === 0 && (
               <motion.div 
                 variants={itemVariants}
-                className="p-4 border-t border-zinc-200/70 dark:border-zinc-800/70 text-center bg-gradient-to-b from-zinc-50/50 to-zinc-100/70 dark:from-zinc-800/50 dark:to-zinc-800/80"
+                className="p-6 text-center"
               >
-                <motion.button 
-                  onClick={handleSearch}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors flex items-center justify-center gap-2 mx-auto group"
-                >
-                  <span>View all results for "{query}"</span>
-                  <motion.div
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ 
-                      repeat: Infinity, 
-                      repeatType: "loop", 
-                      duration: 1.5,
-                      repeatDelay: 0.5,
-                      ease: "easeInOut" 
-                    }}
-                  >
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </motion.div>
-                </motion.button>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 mb-3">
+                  <Search className="h-6 w-6 text-zinc-400 dark:text-zinc-500" />
+                </div>
+                <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
+                  No results found
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
+                  Try searching with different keywords
+                </p>
+                <div className="flex justify-center gap-2">
+                  {popularSearches.slice(0, 3).map((search) => (
+                    <button
+                      key={search.name}
+                      onClick={() => {
+                        setQuery(search.name);
+                        handleSearch();
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    >
+                      {search.name}
+                    </button>
+                  ))}
+                </div>
               </motion.div>
-            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

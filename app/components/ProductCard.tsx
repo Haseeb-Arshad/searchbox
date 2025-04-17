@@ -1,5 +1,5 @@
 import { Link } from "@remix-run/react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ShoppingCart, ExternalLink, Star, ArrowRight, Tag, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -69,151 +69,156 @@ export default function ProductCard({ product }: ProductCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ 
-        y: -8,
-        scale: 1.03,
-        transition: { duration: 0.4, type: "spring", stiffness: 300, damping: 15 }
+        y: -5,
+        transition: { duration: 0.3, type: "spring", stiffness: 400, damping: 20 }
       }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="bg-surface-light dark:bg-surface-dark rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 border border-zinc-200 dark:border-zinc-800 h-full flex flex-col group"
+      className="bg-white dark:bg-zinc-900 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-zinc-200 dark:border-zinc-800 h-full flex flex-col group"
     >
-      <div className="relative overflow-hidden">
-        <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+      {/* Product Image Container with Badge and Favorite Button */}
+      <div className="relative h-48 overflow-hidden">
+        {/* Image */}
+        <motion.div
+          animate={{ 
+            scale: isHovered ? 1.05 : 1,
+            transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
+          }}
+          className="w-full h-full bg-zinc-100 dark:bg-zinc-800"
+        >
           {product.image ? (
-            <motion.img
+            <img
               src={product.image}
               alt={product.title}
-              className="w-full h-56 object-cover"
-              animate={{ 
-                scale: isHovered ? 1.1 : 1,
-                transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] }
-              }}
+              className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-56 flex items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900">
-              <ShoppingCart className="h-10 w-10 text-zinc-400 opacity-50" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900">
+              <ShoppingCart className="h-8 w-8 text-zinc-400 opacity-50" />
             </div>
           )}
-        </div>
+        </motion.div>
         
-        {/* Overlay with gradient */}
+        {/* Overlay with gradient that appears on hover */}
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
           initial={{ opacity: 0 }}
           animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         />
         
+        {/* Store badge */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.05 }}
+          className="absolute top-2.5 left-2.5 z-10"
+        >
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-white/90 dark:bg-zinc-800/90 text-primary-600 dark:text-primary-400 shadow-sm backdrop-blur-sm">
+            <Tag className="h-3 w-3" />
+            {product.storeName}
+          </span>
+        </motion.div>
+        
         {/* Favorite button */}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-2.5 right-2.5 z-10">
           <motion.button 
-            whileTap={{ scale: 0.85 }}
             whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={toggleFavorite}
-            className={`bg-white/95 dark:bg-zinc-900/95 shadow-lg p-2.5 rounded-full transition-all duration-300 backdrop-blur-sm ${
-              isLiked ? 'bg-red-50 dark:bg-red-900/30 scale-110' : ''
-            }`}
+            className={`p-2 rounded-full shadow-sm backdrop-blur-sm ${
+              isLiked 
+                ? 'bg-red-50 dark:bg-red-900/30' 
+                : 'bg-white/90 dark:bg-zinc-800/90'
+            } transition-all duration-200`}
             aria-label={isLiked ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart 
-              className={`h-5 w-5 ${
+              className={`h-4 w-4 ${
                 isLiked 
                   ? 'text-accent-pink fill-accent-pink' 
-                  : 'text-zinc-500 hover:text-accent-pink dark:text-zinc-400 dark:hover:text-accent-pink'
+                  : 'text-zinc-500 dark:text-zinc-400'
               }`} 
             />
           </motion.button>
         </div>
         
-        {/* Store badge */}
-        <div className="absolute top-3 left-3 z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white/95 dark:bg-zinc-900/95 px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm flex items-center gap-1.5"
-          >
-            <Tag className="h-3 w-3 text-primary-500 dark:text-primary-400" />
-            <span className="text-xs font-semibold text-primary-600 dark:text-primary-400">{product.storeName}</span>
-          </motion.div>
-        </div>
-        
-        {/* Bottom action buttons that appear on hover */}
-        <motion.div 
-          className="absolute bottom-3 w-full px-4 flex justify-center items-center gap-2"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: isHovered ? 0 : 20, opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <Link
-            to={`/product/${product.id}`}
-            className="group w-full px-4 py-2.5 bg-white/95 dark:bg-zinc-900/95 rounded-xl text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 flex items-center justify-center gap-2 transition-all duration-300 shadow-lg backdrop-blur-sm"
-          >
-            <Eye className="h-4 w-4" />
-            <span>View Details</span>
-          </Link>
-        </motion.div>
+        {/* View details button that appears on hover */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute bottom-3 left-0 right-0 flex justify-center px-3 z-10"
+            >
+              <Link
+                to={`/product/${product.id}`}
+                className="py-1.5 px-3 bg-white/90 dark:bg-zinc-800/90 rounded-md text-xs font-medium text-primary-600 dark:text-primary-400 shadow-sm backdrop-blur-sm hover:bg-primary-50 dark:hover:bg-primary-900/30 flex items-center gap-1.5 transition-colors"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                View Details
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       
-      <div className="p-5 flex-1 flex flex-col">
+      {/* Product Information */}
+      <div className="p-3 flex-1 flex flex-col">
         {/* Title */}
         <Link to={`/product/${product.id}`} className="group">
-          <h3 className="font-semibold text-zinc-900 dark:text-zinc-50 line-clamp-2 mb-3 text-lg leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
+          <h3 className="font-medium text-zinc-900 dark:text-zinc-50 line-clamp-2 text-sm leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
             {product.title}
           </h3>
         </Link>
         
-        {/* Seller */}
+        {/* Seller (if available) */}
         {product.seller && (
-          <div className="mb-3">
-            <span className="text-xs text-zinc-500 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-1 rounded-md inline-flex items-center">
+          <div className="mt-2">
+            <span className="text-xs text-zinc-500 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-800/80 px-1.5 py-0.5 rounded inline-flex items-center">
               <span className="mr-1">Seller:</span>
               <span className="font-medium truncate max-w-[120px]">{product.seller}</span>
             </span>
           </div>
         )}
         
-        <div className="mt-auto pt-4">
+        <div className="mt-auto pt-2 flex items-end justify-between">
           {/* Price */}
           {product.price && (
-            <div className="mb-3">
-              <motion.span 
-                className="text-lg font-bold text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 py-1 px-3 rounded-lg inline-block"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                {product.price}
-              </motion.span>
-            </div>
+            <motion.span 
+              className="text-sm font-bold text-zinc-900 dark:text-zinc-100"
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              {product.price}
+            </motion.span>
           )}
           
           {/* Rating */}
           {product.rating && (
-            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-4 w-4 ${
-                          i < Math.floor(parseFloat(product.rating || "0")) 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : "text-zinc-300 dark:text-zinc-600"
-                        }`} 
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400 ml-1 font-medium">
-                    {product.rating}
-                  </span>
-                </div>
-                {product.reviewCount && (
-                  <span className="text-xs bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-500 dark:text-zinc-400">
-                    {product.reviewCount} reviews
-                  </span>
-                )}
+            <div className="flex items-center gap-1">
+              <div className="flex">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star 
+                    key={i} 
+                    className={`h-3 w-3 ${
+                      i < Math.floor(parseFloat(product.rating || "0")) 
+                        ? "text-yellow-400 fill-yellow-400" 
+                        : "text-zinc-300 dark:text-zinc-700"
+                    }`} 
+                  />
+                ))}
               </div>
+              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                {product.rating}
+              </span>
+              {product.reviewCount && (
+                <span className="text-xs text-zinc-400 dark:text-zinc-600">
+                  ({product.reviewCount})
+                </span>
+              )}
             </div>
           )}
         </div>

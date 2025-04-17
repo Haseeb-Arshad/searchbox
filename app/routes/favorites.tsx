@@ -146,20 +146,20 @@ export default function Favorites() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05
+        staggerChildren: 0.08
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
         type: "spring",
-        stiffness: 300,
-        damping: 24
+        stiffness: 350,
+        damping: 25
       }
     }
   };
@@ -241,18 +241,20 @@ export default function Favorites() {
           </motion.div>
           
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-              {[...Array(6)].map((_, index) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {[...Array(10)].map((_, index) => (
                 <div 
                   key={index} 
-                  className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 h-[420px] relative"
+                  className="bg-white dark:bg-zinc-900 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800 h-[280px] relative"
                 >
-                  <div className="h-60 bg-zinc-200 dark:bg-zinc-800 animate-pulse"></div>
-                  <div className="p-5 space-y-3">
-                    <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-3/4"></div>
-                    <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-1/2"></div>
-                    <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-1/4 mt-2"></div>
-                    <div className="h-10 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-full mt-4"></div>
+                  <div className="h-40 bg-zinc-200 dark:bg-zinc-800 animate-pulse"></div>
+                  <div className="p-3 space-y-2">
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-1/2"></div>
+                    <div className="flex justify-between items-center mt-3">
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-1/4"></div>
+                      <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse w-1/4"></div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -287,23 +289,28 @@ export default function Favorites() {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
               >
-                {getFilteredProducts().map((product) => (
+                {getFilteredProducts().map((product, index) => (
                   <motion.div
                     key={product.id}
                     variants={itemVariants}
-                    className="relative group"
+                    custom={index}
+                    className="relative"
                   >
-                    <div className="absolute z-10 top-3 right-3">
+                    <div className="absolute z-10 top-2.5 right-2.5 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => removeFavorite(product.id)}
-                        className="p-2 bg-white/90 dark:bg-zinc-900/90 rounded-full shadow-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors group-hover:opacity-100 sm:opacity-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          removeFavorite(product.id);
+                        }}
+                        className="p-2 bg-white/90 dark:bg-zinc-900/90 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                         aria-label="Remove from favorites"
                       >
-                        <TrashIcon className="h-5 w-5 text-zinc-500 hover:text-accent-pink dark:text-zinc-400 dark:hover:text-accent-pink" />
+                        <TrashIcon className="h-4 w-4 text-zinc-500 hover:text-accent-pink dark:text-zinc-400 dark:hover:text-accent-pink" />
                       </motion.button>
                     </div>
                     <ProductCard product={product} />
