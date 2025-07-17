@@ -90,36 +90,46 @@ export default function EnhancedSearchBar() {
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [isFocused])
 
-  // Make search dropdown appear above everything
+  // Handle dropdown positioning and z-index
   useEffect(() => {
-    // Append dropdown to body when focused to ensure it's above all content
-    if (isFocused && dropdownRef.current) {
-      document.body.style.overflow = "auto"
-      
-      // Add scroll listener to adjust dropdown position on scroll
-      const handleScroll = () => {
+    if (isFocused && dropdownRef.current && searchBoxRef.current) {
+      const updatePosition = () => {
         if (searchBoxRef.current && dropdownRef.current) {
           const rect = searchBoxRef.current.getBoundingClientRect()
-          if (dropdownRef.current) {
-            dropdownRef.current.style.position = "fixed"
-            dropdownRef.current.style.top = `${rect.bottom + 8}px`
-            dropdownRef.current.style.left = `${rect.left}px`
-            dropdownRef.current.style.width = `${rect.width}px`
-            dropdownRef.current.style.zIndex = "9999"
+          const dropdown = dropdownRef.current
+          
+          // Position dropdown below search box
+          dropdown.style.position = "fixed"
+          dropdown.style.top = `${rect.bottom + 8}px`
+          dropdown.style.left = `${rect.left}px`
+          dropdown.style.width = `${rect.width}px`
+          dropdown.style.zIndex = "9999"
+          
+          // Check if dropdown would go below viewport
+          const dropdownHeight = dropdown.offsetHeight
+          const viewportHeight = window.innerHeight
+          
+          if (rect.bottom + dropdownHeight + 16 > viewportHeight) {
+            // Position above search box if not enough space below
+            dropdown.style.top = `${rect.top - dropdownHeight - 8}px`
           }
         }
       }
       
       // Initial positioning
-      handleScroll()
+      updatePosition()
       
-      window.addEventListener("scroll", handleScroll)
-      window.addEventListener("resize", handleScroll)
+      // Update position on scroll and resize
+      const handlePositionUpdate = () => {
+        requestAnimationFrame(updatePosition)
+      }
+      
+      window.addEventListener("scroll", handlePositionUpdate, { passive: true })
+      window.addEventListener("resize", handlePositionUpdate, { passive: true })
       
       return () => {
-        window.removeEventListener("scroll", handleScroll)
-        window.removeEventListener("resize", handleScroll)
-        document.body.style.overflow = ""
+        window.removeEventListener("scroll", handlePositionUpdate)
+        window.removeEventListener("resize", handlePositionUpdate)
       }
     }
   }, [isFocused])
